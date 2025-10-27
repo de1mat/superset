@@ -87,29 +87,31 @@ export function Sidebar({
             {/* Top Section - Matches window controls height */}
             <div
                 className="flex items-center border-b border-neutral-800"
-                style={{ height: "48px", paddingLeft: "88px" }}
+                style={{ height: "48px", paddingLeft: "88px", WebkitAppRegion: "drag" } as React.CSSProperties}
             >
-                <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={onCollapse}
-                >
-                    <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
+                <div style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={onCollapse}
                     >
-                        <path
-                            d="M10 4L6 8L10 12"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </svg>
-                </Button>
+                        <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M10 4L6 8L10 12"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                        </svg>
+                    </Button>
+                </div>
             </div>
 
             {/* Tabs Section */}

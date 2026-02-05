@@ -268,8 +268,20 @@ export function FilesView() {
 	}, [tree]);
 
 	const handleToggleHiddenFiles = useCallback(() => {
-		setShowHiddenFiles((v) => !v);
+		setShowHiddenFiles((prev) => {
+			const newValue = !prev;
+			// Update ref synchronously so invalidation uses correct value
+			showHiddenFilesRef.current = newValue;
+			return newValue;
+		});
+		// Invalidate root explicitly (getItems() may not include it)
 		tree.getItemInstance("root")?.invalidateChildrenIds();
+		// Also invalidate expanded directories so nested hidden files appear
+		for (const item of tree.getItems()) {
+			if (item.getItemData()?.isDirectory) {
+				item.invalidateChildrenIds();
+			}
+		}
 	}, [tree]);
 
 	const searchResultEntries = useMemo(() => {

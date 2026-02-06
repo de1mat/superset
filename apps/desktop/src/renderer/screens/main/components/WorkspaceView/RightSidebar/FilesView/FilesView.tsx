@@ -15,10 +15,7 @@ import { useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LuFile, LuFolder } from "react-icons/lu";
 import { electronTrpc } from "renderer/lib/electron-trpc";
-import {
-	LEGACY_SHOW_HIDDEN_KEY,
-	useFileExplorerStore,
-} from "renderer/stores/file-explorer";
+import { useFileExplorerStore } from "renderer/stores/file-explorer";
 import { useTabsStore } from "renderer/stores/tabs/store";
 import type { DirectoryEntry } from "shared/file-tree-types";
 import { DeleteConfirmDialog } from "./components/DeleteConfirmDialog";
@@ -43,10 +40,7 @@ export function FilesView() {
 	const [searchTerm, setSearchTerm] = useState("");
 	const projectId = workspace?.project?.id;
 	const showHiddenFiles = useFileExplorerStore(
-		(s) =>
-			s.showHiddenFiles[projectId ?? LEGACY_SHOW_HIDDEN_KEY] ??
-			s.showHiddenFiles[LEGACY_SHOW_HIDDEN_KEY] ??
-			false,
+		(s) => (projectId ? (s.showHiddenFiles[projectId] ?? false) : false),
 	);
 	const toggleHiddenFiles = useFileExplorerStore((s) => s.toggleHiddenFiles);
 

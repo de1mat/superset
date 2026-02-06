@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 
-export const LEGACY_SHOW_HIDDEN_KEY = "__legacy__";
-
 export type SortBy = "name" | "type" | "modified";
 export type SortDirection = "asc" | "desc";
 
@@ -142,10 +140,7 @@ export const useFileExplorerStore = create<FileExplorerState>()(
 				},
 
 				toggleHiddenFiles: (projectId) => {
-					const current =
-						get().showHiddenFiles[projectId] ??
-						get().showHiddenFiles[LEGACY_SHOW_HIDDEN_KEY] ??
-						false;
+					const current = get().showHiddenFiles[projectId] ?? false;
 					set({
 						showHiddenFiles: {
 							...get().showHiddenFiles,
@@ -164,17 +159,6 @@ export const useFileExplorerStore = create<FileExplorerState>()(
 			}),
 			{
 				name: "file-explorer-store",
-				version: 1,
-				migrate: (persisted, version) => {
-					const state = persisted as Record<string, unknown>;
-					// v0 -> v1: showHiddenFiles changed from boolean to Record<string, boolean>
-					// Preserve legacy value so users don't lose their preference
-					if (version === 0 && typeof state.showHiddenFiles === "boolean") {
-						const legacyValue = state.showHiddenFiles;
-						state.showHiddenFiles = { [LEGACY_SHOW_HIDDEN_KEY]: legacyValue };
-					}
-					return state as FileExplorerState;
-				},
 				partialize: (state) => ({
 					showHiddenFiles: state.showHiddenFiles,
 					sortBy: state.sortBy,

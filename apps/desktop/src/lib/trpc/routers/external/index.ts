@@ -7,7 +7,7 @@ import { publicProcedure, router } from "../..";
 import {
 	EXTERNAL_APPS,
 	type ExternalApp,
-	getAppCommand,
+	getAppCandidates,
 	resolvePath,
 	spawnAsync,
 } from "./helpers";
@@ -23,13 +23,32 @@ async function openPathInApp(
 		return;
 	}
 
-	const cmd = getAppCommand(app, filePath);
-	if (cmd) {
-		await spawnAsync(cmd.command, cmd.args);
+	const candidates = getAppCandidates(app, filePath);
+	if (candidates.length === 0) {
+		await shell.openPath(filePath);
 		return;
 	}
 
-	await shell.openPath(filePath);
+	// Try each candidate in order, falling back only when the app is not found.
+	// Re-throw immediately for other errors (bad path, permissions, etc.)
+	let lastError: Error | undefined;
+	for (const cmd of candidates) {
+		try {
+			await spawnAsync(cmd.command, cmd.args);
+			return;
+		} catch (error) {
+			lastError = error instanceof Error ? error : new Error(String(error));
+			const msg = lastError.message.toLowerCase();
+			const isAppNotFound = msg.includes("unable to find application");
+			if (!isAppNotFound) {
+				throw lastError;
+			}
+		}
+	}
+
+	if (lastError) {
+		throw lastError;
+	}
 }
 
 /**

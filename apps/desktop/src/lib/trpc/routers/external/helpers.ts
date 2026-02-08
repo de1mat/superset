@@ -2,8 +2,11 @@ import { spawn } from "node:child_process";
 import nodePath from "node:path";
 import { EXTERNAL_APPS, type ExternalApp } from "@superset/local-db";
 
-/** Map of app IDs to their macOS application names */
-const APP_NAMES: Record<ExternalApp, string | null> = {
+/**
+ * Map of app IDs to their macOS application names.
+ * Arrays indicate edition variants to try in order (preferred first).
+ */
+const APP_NAMES: Record<ExternalApp, string | string[] | null> = {
 	finder: null, // Handled specially with shell.showItemInFolder
 	vscode: "Visual Studio Code",
 	"vscode-insiders": "Visual Studio Code - Insiders",
@@ -15,9 +18,9 @@ const APP_NAMES: Record<ExternalApp, string | null> = {
 	terminal: "Terminal",
 	ghostty: "Ghostty",
 	sublime: "Sublime Text",
-	intellij: "IntelliJ IDEA",
+	intellij: ["IntelliJ IDEA Ultimate", "IntelliJ IDEA CE", "IntelliJ IDEA"],
 	webstorm: "WebStorm",
-	pycharm: "PyCharm",
+	pycharm: ["PyCharm Professional", "PyCharm CE", "PyCharm"],
 	phpstorm: "PhpStorm",
 	rubymine: "RubyMine",
 	goland: "GoLand",
@@ -30,16 +33,35 @@ const APP_NAMES: Record<ExternalApp, string | null> = {
 };
 
 /**
+ * Get all candidate commands for opening a path in the specified app.
+ * Returns multiple candidates for apps with edition variants (e.g. JetBrains IDEs).
+ * Returns empty array for apps handled specially (e.g. Finder).
+ */
+export function getAppCandidates(
+	app: ExternalApp,
+	targetPath: string,
+): { command: string; args: string[] }[] {
+	const appName = APP_NAMES[app];
+	if (!appName) return [];
+
+	const names = Array.isArray(appName) ? appName : [appName];
+	return names.map((name) => ({
+		command: "open",
+		args: ["-a", name, targetPath],
+	}));
+}
+
+/**
  * Get the command and args to open a path in the specified app.
+ * For apps with edition variants, returns the first (preferred) candidate.
  * Uses `open -a` for macOS apps to avoid PATH issues in production builds.
  */
 export function getAppCommand(
 	app: ExternalApp,
 	targetPath: string,
 ): { command: string; args: string[] } | null {
-	const appName = APP_NAMES[app];
-	if (!appName) return null;
-	return { command: "open", args: ["-a", appName, targetPath] };
+	const candidates = getAppCandidates(app, targetPath);
+	return candidates[0] ?? null;
 }
 
 /**

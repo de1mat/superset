@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import os from "node:os";
 import path from "node:path";
-import { getAppCommand, resolvePath, stripPathWrappers } from "./helpers";
+import {
+	getAppCandidates,
+	getAppCommand,
+	resolvePath,
+	stripPathWrappers,
+} from "./helpers";
 
 describe("getAppCommand", () => {
 	test("returns null for finder (handled specially)", () => {
@@ -73,11 +78,11 @@ describe("getAppCommand", () => {
 	});
 
 	describe("JetBrains IDEs", () => {
-		test("returns correct command for intellij", () => {
+		test("returns first candidate for intellij (Ultimate edition)", () => {
 			const result = getAppCommand("intellij", "/path/to/file");
 			expect(result).toEqual({
 				command: "open",
-				args: ["-a", "IntelliJ IDEA", "/path/to/file"],
+				args: ["-a", "IntelliJ IDEA Ultimate", "/path/to/file"],
 			});
 		});
 
@@ -89,11 +94,11 @@ describe("getAppCommand", () => {
 			});
 		});
 
-		test("returns correct command for pycharm", () => {
+		test("returns first candidate for pycharm (Professional edition)", () => {
 			const result = getAppCommand("pycharm", "/path/to/file");
 			expect(result).toEqual({
 				command: "open",
-				args: ["-a", "PyCharm", "/path/to/file"],
+				args: ["-a", "PyCharm Professional", "/path/to/file"],
 			});
 		});
 
@@ -120,6 +125,40 @@ describe("getAppCommand", () => {
 			command: "open",
 			args: ["-a", "Cursor", "/path/with spaces/file.ts"],
 		});
+	});
+});
+
+describe("getAppCandidates", () => {
+	test("returns empty array for finder", () => {
+		expect(getAppCandidates("finder", "/path/to/file")).toEqual([]);
+	});
+
+	test("returns single candidate for single-edition app", () => {
+		expect(getAppCandidates("webstorm", "/path/to/file")).toEqual([
+			{ command: "open", args: ["-a", "WebStorm", "/path/to/file"] },
+		]);
+	});
+
+	test("returns multiple candidates for intellij (edition variants)", () => {
+		expect(getAppCandidates("intellij", "/path/to/file")).toEqual([
+			{
+				command: "open",
+				args: ["-a", "IntelliJ IDEA Ultimate", "/path/to/file"],
+			},
+			{ command: "open", args: ["-a", "IntelliJ IDEA CE", "/path/to/file"] },
+			{ command: "open", args: ["-a", "IntelliJ IDEA", "/path/to/file"] },
+		]);
+	});
+
+	test("returns multiple candidates for pycharm (edition variants)", () => {
+		expect(getAppCandidates("pycharm", "/path/to/file")).toEqual([
+			{
+				command: "open",
+				args: ["-a", "PyCharm Professional", "/path/to/file"],
+			},
+			{ command: "open", args: ["-a", "PyCharm CE", "/path/to/file"] },
+			{ command: "open", args: ["-a", "PyCharm", "/path/to/file"] },
+		]);
 	});
 });
 
